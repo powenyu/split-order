@@ -48,6 +48,8 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	//If we message ping to our bot in our discord it will return us pong .
 	if m.Content == "ping" {
+		PrettyPrint("m :", m)
+		PrettyPrint("s :", s)
 		_, _ = s.ChannelMessageSend(m.ChannelID, "pong")
 	}
 }
