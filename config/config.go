@@ -22,6 +22,7 @@ type configStruct struct {
 func ReadConfig() error {
 
 	env := os.Getenv("env")
+	fmt.Println("debug log : ", env)
 	if env == "production" {
 		Token = os.Getenv("Token")
 		BotPrefix = os.Getenv("BotPrefix")
