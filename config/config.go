@@ -8,15 +8,17 @@ import (
 )
 
 var (
-	Token     string //To store value of Token from config.json .
-	BotPrefix string // To store value of BotPrefix from config.json.
-
-	config *configStruct //To store value extracted from config.json.
+	Token        string
+	BotPrefix    string
+	Port         string
+	ReadTimeout  int = 180
+	WriteTimeout int = 60
 )
 
 type configStruct struct {
 	Token     string `json:"Token"`
 	BotPrefix string `json:"BotPrefix"`
+	Port      string `json:"PORT"`
 }
 
 func ReadConfig() error {
@@ -26,7 +28,7 @@ func ReadConfig() error {
 	if env == "production" {
 		Token = os.Getenv("Token")
 		BotPrefix = os.Getenv("BotPrefix")
-
+		Port = os.Getenv("PORT")
 		return nil
 	}
 
@@ -36,6 +38,7 @@ func ReadConfig() error {
 		return err
 	}
 
+	var config configStruct
 	fmt.Println(string(file))
 	err = json.Unmarshal(file, &config)
 	if err != nil {
@@ -45,6 +48,7 @@ func ReadConfig() error {
 
 	Token = config.Token
 	BotPrefix = config.BotPrefix
+	Port = config.Port
 
 	return nil
 }
