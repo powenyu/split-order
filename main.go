@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/powenyu/split-order/bot"
 	"github.com/powenyu/split-order/config"
 	"github.com/powenyu/split-order/routes"
 	"golang.org/x/sync/errgroup"
@@ -22,8 +21,6 @@ func init() {
 		fmt.Println(err.Error())
 		return
 	}
-
-	bot.Start()
 }
 
 func main() {

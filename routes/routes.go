@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/powenyu/split-order/bot"
 )
 
 // InitRouter init router
@@ -26,5 +27,6 @@ func InitRouter() *gin.Engine {
 }
 
 func Start(c *gin.Context) {
+	bot.Start()
 	fmt.Println("Hello World")
 }
