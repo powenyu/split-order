@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt" //to print errors
+	"strings"
 
 	"github.com/bwmarrin/discordgo"         //discordgo package from the repo of bwmarrin .
 	"github.com/powenyu/split-order/config" //importing our config package which we have created above
@@ -46,10 +47,69 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == BotId {
 		return
 	}
+
 	//If we message ping to our bot in our discord it will return us pong .
 	if m.Content == "ping" {
-		PrettyPrint("m :", m)
-		PrettyPrint("s :", s)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "pong")
+		_, err := s.ChannelMessageSend(m.ChannelID, "pong")
+		if err != nil {
+			fmt.Println("send message, err: ", err.Error())
+			return
+		}
+	}
+
+	if m.Content[0:1] != config.BotPrefix {
+		return
+	}
+
+	cmdline := strings.Split(m.Content, " ")
+
+	switch cmdline[0] {
+	case "!create":
+		order, err := CreateOrder(m)
+		if err != nil {
+			_, _ = s.ChannelMessageSend(m.ChannelID, err.Error()+"  你是不是不會打字？？")
+			return
+		}
+
+		if !order.IsValid() {
+			_, err := s.ChannelMessageSend(m.ChannelID, "發生問題ˋˊ 請私訊<@428929512193916928>釐清責任歸屬")
+			if err != nil {
+				fmt.Println("send message, err: ", err.Error())
+			}
+			return
+		}
+
+		//TODO: save order to database
+		if err := order.Create(); err != nil {
+			_, sendErr := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s <@428929512193916928>決定要去搖飲料了", err.Error()))
+			if err != nil {
+				fmt.Println("send message, err: ", sendErr.Error())
+			}
+			return
+		}
+
+		_, err = s.ChannelMessageSend(m.ChannelID, "資料插入成功 大概吧")
+		if err != nil {
+			fmt.Println("send message, err: ", err.Error())
+			return
+		}
+		return
+	case "!list":
+		msg, err := List(m)
+		if err != nil {
+			_, sendErr := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s <@428929512193916928>決定要去搖飲料了", err.Error()))
+			if err != nil {
+				fmt.Println("send message, err: ", sendErr.Error())
+			}
+			return
+		}
+
+		_, err = s.ChannelMessageSend(m.ChannelID, msg)
+		if err != nil {
+			fmt.Println("send message, err: ", err.Error())
+		}
+		return
+	default:
+		return
 	}
 }

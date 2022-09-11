@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/powenyu/split-order/config"
+	postgresql "github.com/powenyu/split-order/postgres"
 	"github.com/powenyu/split-order/routes"
 	"golang.org/x/sync/errgroup"
 )
@@ -21,6 +22,8 @@ func init() {
 		fmt.Println(err.Error())
 		return
 	}
+
+	postgresql.Initialize()
 }
 
 func main() {
@@ -60,4 +63,5 @@ func main() {
 		log.Println("[error]", err)
 	}
 	log.Println("[info] HTTP Server Exited")
+	postgresql.Dispose()
 }

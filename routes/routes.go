@@ -1,11 +1,9 @@
 package routes
 
 import (
-	"fmt"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/powenyu/split-order/bot"
+	v1 "github.com/powenyu/split-order/controllers/v1"
 )
 
 // InitRouter init router
@@ -21,12 +19,9 @@ func InitRouter() *gin.Engine {
 	}
 	router.Use(cors.New(config))
 
-	router.GET("/", Start)
+	router.GET("/", v1.Start)
 
+	apiv1 := router.Group("/api/v1")
+	apiv1.GET("/test", v1.Dbtest)
 	return router
-}
-
-func Start(c *gin.Context) {
-	bot.Start()
-	fmt.Println("Hello World")
 }

@@ -11,14 +11,16 @@ var (
 	Token        string
 	BotPrefix    string
 	Port         string
+	DatabaseURL  string
 	ReadTimeout  int = 180
 	WriteTimeout int = 60
 )
 
 type configStruct struct {
-	Token     string `json:"Token"`
-	BotPrefix string `json:"BotPrefix"`
-	Port      string `json:"PORT"`
+	Token       string `json:"Token"`
+	BotPrefix   string `json:"BotPrefix"`
+	Port        string `json:"PORT"`
+	DatabaseURL string `json:"DATABASE_URL"`
 }
 
 func ReadConfig() error {
@@ -29,6 +31,7 @@ func ReadConfig() error {
 		Token = os.Getenv("Token")
 		BotPrefix = os.Getenv("BotPrefix")
 		Port = os.Getenv("PORT")
+		DatabaseURL = os.Getenv("DATABASE_URL")
 		return nil
 	}
 
@@ -49,6 +52,7 @@ func ReadConfig() error {
 	Token = config.Token
 	BotPrefix = config.BotPrefix
 	Port = config.Port
+	DatabaseURL = config.DatabaseURL
 
 	return nil
 }
