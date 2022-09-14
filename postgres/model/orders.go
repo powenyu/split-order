@@ -45,7 +45,6 @@ func (o *Order) Create() error {
 	%s
 	`, strings.Join(values, ","))
 
-	fmt.Println("sql", sql)
 	if _, err := postgresql.Pool.Exec(context.Background(), sql, o.Collective, o.GuildID, o.CreatedAt, o.Description); err != nil {
 		return err
 	}
@@ -53,9 +52,8 @@ func (o *Order) Create() error {
 }
 
 func (o *Order) IsValid() bool {
-	//check orderParticipants length
 	//check total
-	if len(o.OrderParticipants) < 1 {
+	if len(o.OrderParticipants) < 1 || o.Collective == "" {
 		return false
 	}
 
@@ -108,7 +106,7 @@ func SelectCollectiveRecord(collective string) (*[]Order, error) {
 		description,
 		JSON_AGG(JSON_BUILD_OBJECT(
 			'user_id',op.user_id,
-			'price', op.price
+			'price', op.price::numeric
 		)) AS order_participants
 	FROM
 		orders AS o

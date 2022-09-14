@@ -65,7 +65,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	switch cmdline[0] {
 	case "!create":
-		order, err := CreateOrder(m)
+		order, err := CreateOrder(m, s)
 		if err != nil {
 			_, _ = s.ChannelMessageSend(m.ChannelID, err.Error()+"  你是不是不會打字？？")
 			return
@@ -95,7 +95,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		return
 	case "!list":
-		msg, err := List(m)
+		msg, err := List(m, s)
 		if err != nil {
 			_, sendErr := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s <@428929512193916928>決定要去搖飲料了", err.Error()))
 			if err != nil {
