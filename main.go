@@ -27,10 +27,11 @@ func init() {
 }
 
 func main() {
+	fmt.Println("port", config.Port)
 	port := config.Port
 	routesInit := routes.InitRouter()
 	server := &http.Server{
-		Addr:           port,
+		Addr:           fmt.Sprintf(":%s", port),
 		Handler:        routesInit,
 		ReadTimeout:    time.Duration(config.ReadTimeout) * time.Second,
 		WriteTimeout:   time.Duration(config.WriteTimeout) * time.Second,
@@ -41,7 +42,6 @@ func main() {
 
 	g.Go(func() error {
 		log.Println("[info] start http server listening", port)
-		log.Println("Addr", server.Addr)
 		return server.ListenAndServe()
 	})
 
