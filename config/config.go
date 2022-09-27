@@ -26,7 +26,6 @@ type configStruct struct {
 func ReadConfig() error {
 
 	env := os.Getenv("env")
-	fmt.Println("debug log : ", env)
 	if env == "production" {
 		Token = os.Getenv("Token")
 		BotPrefix = os.Getenv("BotPrefix")
@@ -54,5 +53,6 @@ func ReadConfig() error {
 	Port = config.Port
 	DatabaseURL = config.DatabaseURL
 
+	fmt.Println("env :", config)
 	return nil
 }
