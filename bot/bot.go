@@ -57,7 +57,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 
-	if m.Content[0:1] != config.BotPrefix {
+	if len(m.Content) < 2 || m.Content[0:1] != config.BotPrefix {
 		return
 	}
 

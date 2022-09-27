@@ -203,9 +203,10 @@ func drawDiagram(orders []model.Order, s *discordgo.Session) (string, error) {
 	fixuser := make([]string, 0, len(allUsers))
 	for k, v := range allUsers {
 		if i < len(allUsers)-1 {
-			comment += fmt.Sprintf("%-30s|", v)
+			comment += fmt.Sprintf("%-20s|", v)
 		} else {
-			comment += fmt.Sprintf("%-30s\n", v)
+			comment += fmt.Sprintf("%-20s|", v)
+			comment += fmt.Sprintf("%-20s\n", "description")
 		}
 		fixuser = append(fixuser, k)
 		i++
@@ -215,11 +216,10 @@ func drawDiagram(orders []model.Order, s *discordgo.Session) (string, error) {
 		i = 0
 		for _, k := range fixuser {
 			if i < len(allUsers)-1 {
-				fmt.Print(k, ",")
-				comment += fmt.Sprintf("%-30s|", fmt.Sprint(int(userRow.userPrice[k])))
+				comment += fmt.Sprintf("%-20s|", fmt.Sprint(int(userRow.userPrice[k])))
 			} else {
-				fmt.Print(k, "\n")
-				comment += fmt.Sprintf("%-30s\n", fmt.Sprint(int(userRow.userPrice[k])))
+				comment += fmt.Sprintf("%-20s|", fmt.Sprint(int(userRow.userPrice[k])))
+				comment += fmt.Sprintf("%-20s\n", fmt.Sprint(userRow.description))
 			}
 			i++
 		}
@@ -229,11 +229,9 @@ func drawDiagram(orders []model.Order, s *discordgo.Session) (string, error) {
 	i = 0
 	for _, k := range fixuser {
 		if i < len(allUsers)-1 {
-			fmt.Print(k, ",")
-			comment += fmt.Sprintf("%-30d|", int(allPrice[k]))
+			comment += fmt.Sprintf("%-20d|", int(allPrice[k]))
 		} else {
-			fmt.Print(k, "\n")
-			comment += fmt.Sprintf("%-30d\n", int(allPrice[k]))
+			comment += fmt.Sprintf("%-20d\n", int(allPrice[k]))
 		}
 		i++
 	}

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/powenyu/split-order/bot"
@@ -21,4 +22,8 @@ func Dbtest(c *gin.Context) {
 		return
 	}
 	fmt.Println("t : ", t)
+}
+
+func HeartBeat(c *gin.Context) {
+	c.Status(http.StatusOK)
 }

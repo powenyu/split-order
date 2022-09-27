@@ -66,7 +66,7 @@ func (o *Order) IsValid() bool {
 			subtotal += v.Price
 		}
 	}
-	if subtotal >= pay*-1 {
+	if subtotal > pay*-1 {
 		return false
 	}
 
