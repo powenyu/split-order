@@ -19,7 +19,6 @@ func InitRouter() *gin.Engine {
 	}
 	router.Use(cors.New(config))
 
-	router.GET("/", v1.Start)
 	router.GET("/heartbeat", v1.HeartBeat)
 	apiv1 := router.Group("/api/v1")
 	apiv1.GET("/test", v1.Dbtest)

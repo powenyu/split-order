@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/powenyu/split-order/bot"
 	"github.com/powenyu/split-order/config"
 	postgresql "github.com/powenyu/split-order/postgres"
 	"github.com/powenyu/split-order/routes"
@@ -27,7 +28,6 @@ func init() {
 }
 
 func main() {
-	fmt.Println("port", config.Port)
 	port := config.Port
 	routesInit := routes.InitRouter()
 	server := &http.Server{
@@ -44,6 +44,14 @@ func main() {
 		log.Println("[info] start http server listening", port)
 		return server.ListenAndServe()
 	})
+
+	bot.Start()
+	go func() {
+		ticker := time.NewTicker(10 * time.Minute)
+		for range ticker.C {
+			http.Get("https://split-order.onrender.com/heartbeat")
+		}
+	}()
 
 	g.Go(func() error {
 		c := make(chan os.Signal, 1)
