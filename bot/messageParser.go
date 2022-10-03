@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,12 @@ type userInfo struct {
 	userID   string
 	userName string
 	price    float64
+}
+
+type payFlow struct {
+	To    string
+	Price float64
+	From  string
 }
 
 type rowInfo struct {
@@ -144,14 +151,16 @@ func List(m *discordgo.MessageCreate, s *discordgo.Session) (string, error) {
 		for i, v := range collectives {
 			comment += fmt.Sprintf("%d: %s \n", i+1, v)
 		}
-	} else if len(cmdlines) == 2 {
+	} else {
 		collective := cmdlines[1]
 		orders, err := model.SelectCollectiveRecord(collective)
 		if err != nil {
 			return comment, err
 		}
 
-		comment, err = drawDiagram(*orders, s)
+		detail := len(cmdlines) == 3 && cmdlines[2] == "--detail"
+
+		comment, err = drawDiagram(*orders, detail, s)
 		if err != nil {
 			return comment, err
 		}
@@ -161,10 +170,8 @@ func List(m *discordgo.MessageCreate, s *discordgo.Session) (string, error) {
 }
 
 //+ , - . 0 ♦ # ° ± n ↓ ┘ ┐ ┌ └ ┼ ⎺ ⎻ ─ ⎼ ⎽ ├ ┤ ┴ ┬ ≤ │ ≥ # ≠ £ ·
-func drawDiagram(orders []model.Order, s *discordgo.Session) (string, error) {
+func drawDiagram(orders []model.Order, detail bool, s *discordgo.Session) (string, error) {
 	var comment string
-
-	PrettyPrint("orders", orders)
 
 	allUsers := make(map[string]string)
 	allPrice := make(map[string]float64)
@@ -185,9 +192,8 @@ func drawDiagram(orders []model.Order, s *discordgo.Session) (string, error) {
 		}
 
 		count(userPrice)
-		PrettyPrint("userPrice2", userPrice)
-		for k, v := range userPrice {
-			allPrice[k] += v
+		for userID, price := range userPrice {
+			allPrice[userID] += price
 		}
 		userRow := rowInfo{
 			userPrice:   userPrice,
@@ -198,45 +204,56 @@ func drawDiagram(orders []model.Order, s *discordgo.Session) (string, error) {
 		userPrice = make(map[string]float64)
 	}
 
-	//set first row
-	i := 0
-	fixuser := make([]string, 0, len(allUsers))
-	for k, v := range allUsers {
-		if i < len(allUsers)-1 {
-			comment += fmt.Sprintf("%-20s|", v)
-		} else {
-			comment += fmt.Sprintf("%-20s|", v)
-			comment += fmt.Sprintf("%-20s\n", "description")
+	if detail {
+		//set first row
+		i := 0
+		fixuser := make([]string, 0, len(allUsers))
+		for k, v := range allUsers {
+			if i < len(allUsers)-1 {
+				comment += fmt.Sprintf("%-20s|", v)
+			} else {
+				comment += fmt.Sprintf("%-20s|", v)
+				comment += fmt.Sprintf("%-20s\n", "description")
+			}
+			fixuser = append(fixuser, k)
+			i++
 		}
-		fixuser = append(fixuser, k)
-		i++
-	}
 
-	for _, userRow := range userRows {
+		for _, userRow := range userRows {
+			i = 0
+			for _, k := range fixuser {
+				if i < len(allUsers)-1 {
+					comment += fmt.Sprintf("%-20s|", fmt.Sprint(int(userRow.userPrice[k])))
+				} else {
+					comment += fmt.Sprintf("%-20s|", fmt.Sprint(int(userRow.userPrice[k])))
+					comment += fmt.Sprintf("%-20s\n", fmt.Sprint(userRow.description))
+				}
+				i++
+			}
+		}
+
+		comment += "\n"
 		i = 0
 		for _, k := range fixuser {
 			if i < len(allUsers)-1 {
-				comment += fmt.Sprintf("%-20s|", fmt.Sprint(int(userRow.userPrice[k])))
+				comment += fmt.Sprintf("%-20d|", int(allPrice[k]))
 			} else {
-				comment += fmt.Sprintf("%-20s|", fmt.Sprint(int(userRow.userPrice[k])))
-				comment += fmt.Sprintf("%-20s\n", fmt.Sprint(userRow.description))
+				comment += fmt.Sprintf("%-20d\n", int(allPrice[k]))
 			}
 			i++
 		}
+		comment += "\n"
 	}
-
-	comment += "\n"
-	i = 0
-	for _, k := range fixuser {
-		if i < len(allUsers)-1 {
-			comment += fmt.Sprintf("%-20d|", int(allPrice[k]))
-		} else {
-			comment += fmt.Sprintf("%-20d\n", int(allPrice[k]))
-		}
-		i++
-	}
-
 	fmt.Print(comment)
+
+	payFlows, err := countPayFlow(allPrice)
+	if err != nil {
+		return comment, err
+	}
+
+	for _, payFlow := range payFlows {
+		comment += fmt.Sprintf("%s -- %d --> %s \n", allUsers[payFlow.From], int(payFlow.Price), allUsers[payFlow.To])
+	}
 
 	return comment, nil
 }
@@ -259,11 +276,63 @@ func count(rowprice map[string]float64) {
 		pay -= v
 	}
 
-	avg := pay / float64(len(rowprice))
+	//maintain sum is zero
+	mod := int(pay) % len(rowprice)
+
+	avg := math.Floor(pay / float64(len(rowprice)))
 
 	for k := range rowprice {
 		rowprice[k] += avg
+		if mod > 0 && rowprice[k] > 0 {
+			rowprice[k]++
+			mod--
+		}
 	}
+}
+
+func countPayFlow(resultMap map[string]float64) ([]payFlow, error) {
+
+	//check priceTotal
+	var payFlows []payFlow
+	i := 0
+	for {
+		i++
+		//find min negative and min positive
+		if i == 10 {
+			return payFlows, nil
+		}
+		var maxID string
+		var maxPrice float64 = math.MaxFloat64
+		var minID string
+		var minPrice float64 = 0
+		for userID, price := range resultMap {
+
+			if price < maxPrice && price > 0 {
+				maxPrice = price
+				maxID = userID
+			}
+			if price < minPrice && price < 0 {
+				minPrice = price
+				minID = userID
+			}
+		}
+
+		if minID == maxID && maxID != "" {
+			return payFlows, errors.New("unexpected error")
+		} else if maxPrice == math.MaxFloat64 && minPrice == 0 {
+			return payFlows, nil
+		}
+
+		payFlows = append(payFlows, payFlow{
+			From:  maxID,
+			To:    minID,
+			Price: maxPrice,
+		})
+
+		resultMap[maxID] -= maxPrice
+		resultMap[minID] += maxPrice
+	}
+
 }
 
 /*
