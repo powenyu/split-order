@@ -12,7 +12,6 @@ var BotId string
 var goBot *discordgo.Session
 
 func Start() {
-
 	//creating new bot session
 	goBot, err := discordgo.New("Bot " + config.Token)
 	if err != nil {

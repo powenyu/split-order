@@ -58,16 +58,6 @@ func CreateOrder(m *discordgo.MessageCreate, s *discordgo.Session) (*model.Order
 			}
 
 			orderParticipants = append(orderParticipants, orderParticipant)
-		} else if strings.Contains(cmdline, "-d") {
-			comment := strings.TrimPrefix(cmdline, "-d=")
-			comment = strings.Trim(comment, "\"")
-
-			if comment == "" {
-				fmt.Println("comment error")
-				return &order, errInvalidCmd
-			}
-
-			order.Description = comment
 		} else if strings.Contains(cmdline, "-c") {
 			collective := strings.TrimPrefix(cmdline, "-c=")
 
@@ -78,6 +68,14 @@ func CreateOrder(m *discordgo.MessageCreate, s *discordgo.Session) (*model.Order
 
 			order.Collective = collective
 		}
+	}
+
+	descriptions := strings.Split(msg, "-d=\"")
+	if len(descriptions) > 1 {
+		description := strings.Split(descriptions[1], "\"")
+		comment := strings.Trim(description[0], "\"")
+
+		order.Description = comment
 	}
 
 	order.OrderParticipants = orderParticipants
@@ -259,7 +257,7 @@ func drawDiagram(orders []model.Order, detail bool, s *discordgo.Session) (strin
 }
 
 func getUser(userID string, s *discordgo.Session) (*discordgo.User, error) {
-	user, err := s.User(strings.Trim(userID, "<>@"))
+	user, err := s.User(strings.Trim(userID, "<>@&"))
 	return user, err
 }
 
